@@ -9,6 +9,8 @@ import { Item } from './item/entities/item.entity';
 import { Order } from './order/entities/order.entity';
 import { Customer } from './customer/entities/customer.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -31,6 +33,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         autoLoadEntities: true,
         synchronize: true,
       }),
+
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('No options provided for data source');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
   ],
   controllers: [AppController],
