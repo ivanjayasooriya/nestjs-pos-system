@@ -1,9 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Repository } from 'typeorm';
+import { Order } from './entities/order.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Item } from '../item/entities/item.entity';
 
 @Injectable()
 export class OrderService {
+  constructor(
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
+    @InjectRepository(Item)
+    private itemRepository: Repository<Item>,
+  ) {}
+
   create(createOrderDto: CreateOrderDto) {
     return 'This action adds a new order';
   }
