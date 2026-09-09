@@ -11,6 +11,7 @@ import { Customer } from './customer/entities/customer.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
+import { createDatabase } from 'typeorm-extension';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { DataSource } from 'typeorm';
         if (!options) {
           throw new Error('No options provided for data source');
         }
+
+        await createDatabase({ options, ifNotExist: true });
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
