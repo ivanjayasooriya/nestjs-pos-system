@@ -7,7 +7,7 @@ export class OrderDetail {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'int', default: 0, unsigned: true })
   quantity: number;
 
   @ManyToOne(() => Order, (order) => order.orderDetails, {

@@ -13,7 +13,7 @@ export class Item {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ unsigned: true })
+  @Column({ type: 'int', default: 0, unsigned: true })
   quantity: number;
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.item)
