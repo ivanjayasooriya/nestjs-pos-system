@@ -28,7 +28,6 @@ export class OrderService {
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const { customerId, total, date, items } = createOrderDto;
 
-    // 1. Verify customer exists
     const customer = await this.customerRepository.findOne({
       where: { id: customerId },
     });
@@ -36,7 +35,6 @@ export class OrderService {
       throw new NotFoundException(`Customer with ID ${customerId} not found`);
     }
 
-    // 2. Fetch and validate all requested items
     const itemIds = items.map((i) => i.itemId);
     const fetchedItems = await this.itemRepository.findBy({ id: In(itemIds) });
 
@@ -46,10 +44,7 @@ export class OrderService {
       );
     }
 
-    // Map fetched items for quick lookup
     const itemMap = new Map(fetchedItems.map((item) => [item.id, item]));
-
-    // 3. Check stock levels and construct OrderDetails
     const orderDetails: OrderDetail[] = [];
 
     for (const dtoItem of items) {
@@ -65,7 +60,6 @@ export class OrderService {
         );
       }
 
-      // Deduct item stock level
       item.quantity -= dtoItem.quantity;
 
       const orderDetail = new OrderDetail();
@@ -74,10 +68,8 @@ export class OrderService {
       orderDetails.push(orderDetail);
     }
 
-    // 4. Update item stock quantities in DB
     await this.itemRepository.save(Array.from(itemMap.values()));
 
-    // 5. Create and save the order (orderDetails will cascade automatically)
     const order = this.orderRepository.create({
       total,
       customer,
