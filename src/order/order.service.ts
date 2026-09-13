@@ -8,43 +8,46 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { In, Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Item } from '../item/entities/item.entity';
 import { Transactional } from 'typeorm-transactional';
-import { Customer } from '../customer/entities/customer.entity';
 import { OrderDetail } from './entities/order-detail.entity';
+import { ItemService } from '../item/item.service';
+import { CustomerService } from '../customer/customer.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-    @InjectRepository(Item)
-    private itemRepository: Repository<Item>,
-    @InjectRepository(Customer)
-    private customerRepository: Repository<Customer>,
+    private readonly itemService: ItemService,
+    private readonly customerService: CustomerService,
   ) {}
 
   @Transactional()
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const { customerId, total, date, items } = createOrderDto;
 
-    const customer = await this.customerRepository.findOne({
-      where: { id: customerId },
-    });
+    const customer = await this.customerService.findOne(customerId);
     if (!customer) {
       throw new NotFoundException(`Customer with ID ${customerId} not found`);
     }
 
     const itemIds = items.map((i) => i.itemId);
-    const fetchedItems = await this.itemRepository.findBy({ id: In(itemIds) });
+    const uniqueItemIds = [...new Set(itemIds)];
+    const fetchedItems = await Promise.all(
+      uniqueItemIds.map((itemId) => this.itemService.findOne(itemId)),
+    );
 
-    if (fetchedItems.length !== itemIds.length) {
+    if (fetchedItems.some((item) => item == null)) {
       throw new NotFoundException(
         'One or more items in the order were not found',
       );
     }
 
-    const itemMap = new Map(fetchedItems.map((item) => [item.id, item]));
+    const itemMap = new Map(
+      fetchedItems
+        .filter((item): item is NonNullable<typeof item> => item != null)
+        .map((item) => [item.id, item]),
+    );
     const orderDetails: OrderDetail[] = [];
 
     for (const dtoItem of items) {
@@ -68,7 +71,11 @@ export class OrderService {
       orderDetails.push(orderDetail);
     }
 
-    await this.itemRepository.save(Array.from(itemMap.values()));
+    await Promise.all(
+      Array.from(itemMap.values()).map((item) =>
+        this.itemService.update(item.id, { quantity: item.quantity }),
+      ),
+    );
 
     const order = this.orderRepository.create({
       total,
@@ -94,5 +101,16 @@ export class OrderService {
 
   remove(id: number) {
     return `This action removes a #${id} order`;
+  }
+
+  findByCustomerId(customerId: number) {
+    return this.orderRepository.find({
+      where: { customer: { id: customerId } },
+      relations: {
+        orderDetails: {
+          item: true,
+        },
+      },
+    });
   }
 }

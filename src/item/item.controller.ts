@@ -32,7 +32,10 @@ export class ItemController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateItemDto: UpdateItemDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateItemDto: UpdateItemDto,
+  ) {
     return this.itemService.update(id, updateItemDto);
   }
 
