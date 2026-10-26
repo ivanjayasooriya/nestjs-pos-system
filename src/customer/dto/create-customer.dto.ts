@@ -8,7 +8,6 @@ import {
 
 export class CreateCustomerDto {
   @IsString()
-  @IsNotEmpty()
   @MinLength(3, { message: 'Name must be at least 3 characters long' })
   name: string;
 
@@ -17,7 +16,6 @@ export class CreateCustomerDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
   @Length(10, 12, {
     message: 'Contact must be between 10 and 12 characters long',
   })

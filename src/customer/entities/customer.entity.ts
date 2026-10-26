@@ -4,6 +4,7 @@ import { Order } from '../../order/entities/order.entity';
 @Entity()
 export class Customer {
   @PrimaryGeneratedColumn()
+  // @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column()

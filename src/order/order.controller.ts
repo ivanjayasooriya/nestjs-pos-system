@@ -27,8 +27,8 @@ export class OrderController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.findOne(id);
   }
 
   @Patch(':id')

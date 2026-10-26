@@ -7,13 +7,20 @@ import {
 } from 'typeorm-transactional';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   initializeTransactionalContext({
     storageDriver: StorageDriver.ASYNC_LOCAL_STORAGE,
   });
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    abortOnError: true,
+    routeConflictPolicy: {
+      duplicate: 'error',
+      shadow: 'warn',
+    },
+  });
 
   app.enableCors();
   app.setGlobalPrefix('api/v1');
